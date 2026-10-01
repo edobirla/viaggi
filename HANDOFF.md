@@ -63,7 +63,7 @@ The repo is `https://github.com/edobirla/viaggi` (private, branch `main`). The a
 **Not working / not verified:**
 - **Google Places enrichment** (photos, rating, hours, exact position) is written but **never tested live**: the user has no API key yet. The code is `geo.ts` `googleEnrich()`, which uses Places API (New) `places:searchText` plus photo `media?skipHttpRedirect=true`. CORS behaviour is unverified.
 - **"Vicino a me"** is untested: the preview browser gives no geolocation.
-- **Not deployed:** the app runs only on `npm run dev`. The repo is private, and GitHub Pages on a private repo requires a paid plan. Consider Cloudflare Pages or Vercel (free, works with private repos) or making the repo public. A PWA needs HTTPS for offline use and Add to Home Screen.
+- **Deploy:** the repo is now PUBLIC and served at https://edobirla.github.io/viaggi/ from the `gh-pages` branch, which contains only the built `dist`. Publish with `npm run deploy` (builds, then force-pushes `dist` to `gh-pages`). Serving `main` directly showed a blank page (raw sources). A GitHub Actions workflow would automate this, but the local `gh` token lacks the `workflow` scope (push rejected); the user would need `gh auth refresh -s workflow`.
 - **No sync:** two travelers cannot share data yet. The planned phase is Firebase Firestore on the free Spark plan; `store.ts` is the single module to swap.
 - **Instagram reel recognition** (planned phase 2) is not started. Plan: an iOS Shortcut in the share sheet opens the PWA with the URL, and the Claude API extracts the place from the caption or a screenshot.
 - **Places without an address** (e.g. VegOut, Kyoto Bien) are often not found or are misplaced by OpenStreetMap.
@@ -181,7 +181,7 @@ Git identity is set locally in the repo (Edoardo / edoardobirla02@gmail.com). Co
 
 ## ➡️ Next Steps
 
-1. **Deploy** for free with HTTPS so the user can install it on iPhone. Use Cloudflare Pages or Vercel connected to the private repo; `base: './'` is already set. Then test Add to Home Screen, offline use, and the pdf.js worker on iOS Safari.
+1. **Test the deployed PWA on iPhone:** Add to Home Screen, offline use, the pdf.js worker on iOS Safari, and restoring the backup file there.
 2. **Google Places key:** guide the user through creating it (the guide text is in Settings), then test `googleEnrich` live. Check CORS on `places:searchText` and the `media?skipHttpRedirect=true` photo URIs, then set quotas and a budget alert.
 3. **Sync between the two travelers:** Firebase Firestore (Spark, free) with Google sign-in, replacing persistence in `store.ts`. Store blobs (photos/files) in Firestore docs under 1 MB, or Firebase Storage (needs the Blaze plan with a card; free tier). Keep the JSON backup feature.
 4. **Instagram reels (phase 2):** an iOS Shortcut in the share sheet opens the PWA at `#/share?url=…`, then the Claude API extracts the place from the caption, then Places lookup. This needs a small serverless endpoint so the API key is not exposed (e.g. a Cloudflare Worker).
@@ -189,7 +189,7 @@ Git identity is set locally in the repo (Edoardo / edoardobirla02@gmail.com). Co
    - rename "Secondo viaggiatore" (trip settings);
    - add real hotel names and addresses (better positions, tax totals);
    - remove the test items "Masaka" (dated 4 May) and "Spostamento Aeroporto → Hotel";
-   - the test attachments ("dpi jallow ebrima.pdf", "IMG_0847.JPG") are still in the user's browser on the Roma→Tokyo flight, but excluded from the backup;
+   - two test attachments (a work PDF and a photo) are still in the user's browser on the Roma→Tokyo flight, but excluded from the backup;
    - delete the flat "Tasse di soggiorno" expense once per-stay taxes are entered.
 6. **Optional improvements:**
    - a map view (MapLibre with OpenFreeMap tiles, free, no key) using `item.pos`;
