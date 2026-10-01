@@ -1,7 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { get, set, del, delMany, entries } from 'idb-keyval'
 import type { Doc, Item, LatLng, Rates, Settings, Trip } from './types'
-import { END, START, TRAVELERS, seedTrips, sheetItems } from './seed'
 import { cityImage, fetchRates, parseBaggage } from './util'
 import { MAX_KM, airportPos, endpointPos, googleEnrich, inBox, km, osmCandidates, osmEnrich, osmSearch, placePos, tripBox, type Box } from './geo'
 
@@ -23,25 +22,8 @@ function commit(next: State) {
 /** Porta i dati salvati alla versione attuale senza perdere quello che hai inserito. */
 function migrate(s: State): State {
   let trips = s.trips.map((t) => ({ ...t, travelers: t.travelers ?? [] }))
-  if ((s.version ?? 2) < 3) {
-    // v3: gli esempi del primo seed lasciano il posto ai dati veri del foglio Excel
-    trips = trips.map((t) => {
-      if (t.id !== 'giappone-2027') return t
-      const kept = t.items.filter((i) => !/esempio/i.test(i.notes ?? ''))
-      const fresh = sheetItems().filter((i) => !kept.some((k) => k.id === i.id))
-      return {
-        ...t, start: START, end: END, budget: t.budget ?? 10000, travelers: t.travelers.length ? t.travelers : TRAVELERS,
-        cities: t.cities.some((c) => c.id === 'miyako') ? t.cities : [...t.cities, { id: 'miyako', name: 'Miyakojima' }],
-        items: [...fresh, ...kept],
-        checklist: t.checklist.map((c) =>
-          /Visit Japan Web/.test(c.text) && c.due === '2027-04-26' ? { ...c, due: '2027-06-16' }
-          : /Ghibli/.test(c.text) && c.due === '2027-04-10' ? { ...c, due: '2027-05-10' } : c),
-      }
-    })
-  }
   if ((s.version ?? 2) < 4) {
     // v4: bagagli da testo a campi, durata del volo come campo invece che nelle note
-    const durations: Record<string, string> = { x1: '20h 15m', x2: '19h 50m', x3: '3h 45m', x4: '2h 40m' }
     trips = trips.map((t) => ({
       ...t,
       items: t.items.map((i) => {
@@ -51,7 +33,7 @@ function migrate(s: State): State {
         return {
           ...rest,
           bags: i.bags ?? parseBaggage(baggage),
-          duration: i.duration ?? (t.id === 'giappone-2027' ? durations[i.id] : undefined) ?? m?.[1],
+          duration: i.duration ?? m?.[1],
           notes: m ? i.notes!.replace(m[0], '').trim() || undefined : i.notes,
         }
       }),
@@ -61,7 +43,8 @@ function migrate(s: State): State {
 }
 
 export const ready = get<State>(KEY).then((s) => {
-  state = s ? migrate(s) : { version: VERSION, trips: seedTrips(), settings: DEFAULT_SETTINGS, geo: {} }
+  // prima installazione: app vuota (i viaggi si creano o si caricano da un backup nelle Impostazioni)
+  state = s ? migrate(s) : { version: VERSION, trips: [], settings: DEFAULT_SETTINGS, geo: {} }
   if (!s || s.version !== VERSION) set(KEY, state)
   subs.forEach((f) => f())
   refreshRates()

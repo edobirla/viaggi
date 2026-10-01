@@ -36,6 +36,11 @@ export function Trips({ adding }: { adding: boolean }) {
             Nuovo viaggio
           </button>
         </div>
+        {!trips.length && (
+          <p className="muted small" style={{ marginTop: 18 }}>
+            Hai già un backup? <a className="link" href="#/settings">Caricalo dalle Impostazioni</a> e ritrovi i tuoi viaggi.
+          </p>
+        )}
       </div>
       <Sheet open={open} onClose={close} center>
         <NewTrip onClose={close} />

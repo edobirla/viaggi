@@ -57,6 +57,7 @@ The repo is `https://github.com/edobirla/viaggi` (private, branch `main`). The a
   - Google Places API key field plus a step-by-step guide.
   - Bulk place enrichment, rates refresh, backup export/import (JSON including blobs), wipe.
 - **Data:** IndexedDB key `state-v2` with `version` 4 and migrations in `store.ts` `migrate()`. The user's real data lives in their browser, so never change the key; always migrate.
+- **Fresh install starts empty.** The Japan trip is NOT in the code (the user asked for this). It lives in the backup file `../viaggi-backup-giappone-2027.json` (outside the repo), loaded via Settings → Ripristina backup. The backup was exported from the user's browser on 2026-10-01 without the two test attachments and with 3 wrong positions reset. `seed.ts` was deleted, and so was the v3 migration that used it.
 - **Checks:** `node src/logic.check.ts` passes; `npx tsc -b` and `npm run build` are clean.
 
 **Not working / not verified:**
@@ -76,7 +77,6 @@ The repo is `https://github.com/edobirla/viaggi` (private, branch `main`). The a
 |------|--------------|
 | `src/types.ts` | Data model: Trip, Item (one type for all kinds), Doc, Bags, Stop, Settings, Rates |
 | `src/store.ts` | State in IndexedDB (idb-keyval) via `useSyncExternalStore`, `migrate()` (v3: Excel data; v4: bags and duration), enrichment queue `enrichTrip`, `enrichOne`, `resolvePlaces`, `resolveTransfers`, photos and files as blobs, backup |
-| `src/seed.ts` | Initial data from the XMind (places, shopping) and the Excel (`sheetItems()`, fixed ids `x1..`); START/END/TRAVELERS |
 | `src/geo.ts` | Haversine `km`, `nearestOrder`, travel/transfer time estimates, `useMyPosition`, Nominatim (`osmCandidates` with trip bounding box and a 10-minute backoff on 429), Wikidata `airportPos`, `googleEnrich`, `osmEnrich`, `endpointPos` |
 | `src/util.ts` | Dates, money/currencies/`convert`, `totals` (includes tourist tax and baggage cost), `stayTax`, `parseBaggage`, labels, maps/route URLs, deadlines and `.ics`, `cmp` |
 | `src/ui.tsx` | Components: Sheet (native `<dialog>`), SheetTop, Switch, Segmented, Options, Field, StarBtn, Gallery, FileList/DocCard, Viewer + `useDocOpener`, PdfPages (pdf.js), CurrencyButton, Hosts (`ask()` confirm and `toast()` popover), Top (back via `nav.ts`) |
@@ -189,7 +189,7 @@ Git identity is set locally in the repo (Edoardo / edoardobirla02@gmail.com). Co
    - rename "Secondo viaggiatore" (trip settings);
    - add real hotel names and addresses (better positions, tax totals);
    - remove the test items "Masaka" (dated 4 May) and "Spostamento Aeroporto → Hotel";
-   - remove the test PDF "dpi jallow ebrima.pdf" (a personal work document) attached to the Roma→Tokyo flight;
+   - the test attachments ("dpi jallow ebrima.pdf", "IMG_0847.JPG") are still in the user's browser on the Roma→Tokyo flight, but excluded from the backup;
    - delete the flat "Tasse di soggiorno" expense once per-stay taxes are entered.
 6. **Optional improvements:**
    - a map view (MapLibre with OpenFreeMap tiles, free, no key) using `item.pos`;
@@ -200,6 +200,7 @@ Git identity is set locally in the repo (Edoardo / edoardobirla02@gmail.com). Co
 
 ## ⚠️ Gotchas / Traps
 
+- **Never put personal trip data in the code** (`seed.ts` was removed on purpose). Old commits in the private repo still contain the seed with trip data; purge the history only if the user asks.
 - **Never change the IndexedDB key `state-v2`:** add a `migrate()` step and bump `VERSION` instead.
 - **The user's personal data** is in the preview browser's IndexedDB (localhost:5173). Do not wipe it while testing. Revert or cancel test edits; never save fake data into their trip.
 - **Respect Nominatim:** max 1 request per second; HMR reloads start parallel queues. If you get 429, wait about 10 minutes.
